@@ -1,0 +1,9 @@
+{
+    "path" : "~/personal/TFM/alquiler-viviendas",
+    "sortOrder" : [
+        {
+            "ascending" : true,
+            "columnIndex" : 2
+        }
+    ]
+}
