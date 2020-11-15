@@ -1,0 +1,91 @@
+---
+title: "extracción de datos"
+author: "Diego Castillo"
+date: "13/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+
+
+
+## Encuesta de Condiciones de Vida - ECV
+
+El objetivo general de la Encuesta de Condiciones de Vida (ECV) es la producción sistemática de estadísticas comunitarias sobre la renta y las condiciones de vida, que incluyan datos transversales y longitudinales comparables y actualizados sobre la renta, el nivel y composición de la pobreza y la exclusión social, a escala nacional y europea. Los microdatos que se distribuyen corresponden a la información transversal de la encuesta realizada en 2019.
+
+La ECV está orientada a proporcionar informaciones comparables y armonizadas sobre los siguientes aspectos del nivel y condiciones de vida y de la cohesión social.
+
+- Ingresos de los hogares privados. Situación económica.
+
+- Pobreza, privación, protección mínima e igualdad de trato.
+
+- Empleo y actividad 
+
+- Jubilaciones, pensiones y situación socioeconómica de las personas de edad.
+
+- Vivienda, costes asociados.
+
+- Desarrollo regional, movimientos migratorios.
+
+- Nivel de formación, salud y efectos de ambos sobre la condición socioeconómica.
+
+De los aspectos nombrados anteriormente, el referente a la vivienda y costes asociados son el objeto de estudio del presente proyecto, en especial para aquellas viviendas que constan con un régimen de tenencia de alquiler.
+
+### Extracción de datos
+
+Los ficheros correspondientes a la ECV, están conformados por 4 archivos en formato csv que contienen información básica y detallada de los hogares y personas. En el presente proyecto se realizará el análisis de los datos detallados de hogares y personas.
+
+```{r extract}
+hogares <- read.csv('../data/data_collect/enc_condiciones_vida/esudb19h.csv', header= TRUE, sep= ',', stringsAsFactors= FALSE )
+personas <- read.csv('../data/data_collect/enc_condiciones_vida/esudb19p.csv', header= TRUE, sep= ',', stringsAsFactors= FALSE )
+```
+
+### Limpieza de datos
+
+Empezando por el dataframe de *hogares*, se eliminan variables intrascendentes para el objeto del presente análisis, ya que estas variables hacen referencia a datos generales de la encuesta como tal. Estas variables se detallan en la tabla a continuación.
+
+
+| Variable | Descripción |
+| ----------- | ----------- |
+| HB010 | Año de la encuesta |
+| HB020 | País |
+| HB050 | Mes de la entrevista |
+| HB050_F | Mes de la entrevista - Flag |
+| HB060 | Año de la entrevista |
+| HB060_F | Año de la entrevista - Flag |
+| HB070 | Identificación personal del informante del cuestionario sobre el hogar |
+| HB070_F | Identificación personal del informante del cuestionario sobre el hogar - Flag |
+| HB080 | Identificación de la primera persona responsable de la vivienda |
+| HB080_F | Identificación de la primera persona responsable de la vivienda - Flag |
+| HB090 | Identificación de la segunda persona responsable de la vivienda |
+| HB090_F | Identificación de la segunda persona responsable de la vivienda - Flag |
+| HB100 | Numero de minutos empleados en cumplimentar el cuestionario sobre el hogar |
+| HB100_F | Numero de minutos empleados en cumplimentar el cuestionario sobre el hogar - Flag |
+
+
+```{r }
+# Se genera un vector con las variables se eliminarán del data frame
+col_borrar_hogares <- c('HB010','HB020','HB050','HB050_F','HB060','HB060_F','HB070','HB070_F','HB080','HB080_F','HB090','HB090_F','HB100','HB100_F')
+
+# Se eliminan las variables innecesarias
+hogares %>% select(-one_of(col_borrar_hogares))
+```
+
+En primer lugar, se desea analizar las características de los hogares y de las personas que alquilan una vivienda, por lo que se realiza el análisis de la variable `HH021`, la cual hace referencia al régimen de tenecia de la vivienda.
+
+
+```{r}
+hogares$HH021 <- factor(hogares$HH021,levels = c(1,2,3,4,5),labels = c('En propiedad sin hipoteca','En propiedad con hipoteca','En alquiler o realquiler a precio de mercado','En alquiler o realquiler a precio inferior al de mercado','En cesión gratuita'))
+
+g1 <- ggplot(hogares, aes(HH021)) +
+  geom_bar(fill="steelblue") +
+  coord_flip()
+g1
+```
