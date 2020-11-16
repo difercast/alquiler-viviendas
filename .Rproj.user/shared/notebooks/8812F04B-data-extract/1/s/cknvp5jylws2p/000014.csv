@@ -1,6 +1,0 @@
-"0","hogares$HH021 <- factor(hogares$HH021,levels = c(1,2,3,4,5),labels = c('En propiedad sin hipoteca','En propiedad con hipoteca','En alquiler o realquiler a precio de mercado','En alquiler o realquiler a precio inferior al de mercado','En cesión gratuita'))"
-"0",""
-"0","g1 <- ggplot(hogares, aes(HH021)) +"
-"0","  geom_bar(fill=""steelblue"") +"
-"0","  coord_flip()"
-"0","g1"

@@ -2,7 +2,9 @@
 title: "extracción de datos"
 author: "Diego Castillo"
 date: "13/11/2020"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -129,8 +131,7 @@ Tomando en cuenta que existen valores nulos, y con el fin de contar con datos co
 Se analiza la distribución de la variable `HH060` para las dos categorias de régimen de tenencia de la vivienda.
 
 ```{r}
-#boxplot(hogares.alquilados$HH060 ~ hogares.alquilados$HH021, horizontal = TRUE,border = c("blue", "green"))
-boxplot(hogares$HH060 ~ hogares$HH021, border = c("blue", "green"))
+boxplot(hogares.alquilados$HH060 ~ hogares.alquilados$HH021, horizontal = TRUE,border = c("blue", "green"))
 ```
 
 
@@ -139,5 +140,4 @@ summary
 hist(hogares.alquilados$HH060)
 hist(hogares$HH060)
 ```
-
 
