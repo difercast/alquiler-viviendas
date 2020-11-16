@@ -15,6 +15,14 @@ library(ggplot2)
 ```
 
 
+En el presente proyecto se desea realizan un análisis sobre las fuentes de datos disponibles tanto oficiales como no oficiales con el fin de resolver las preguntas más importantes sobre el mercado del alquiler en España. Y con esto encontrar las principales patrones y también sesgos en este mercado.
+
+Para ello se analizará en primer lugar la Encuesta de Condiciones de vida generada por el INE de manera anual. Ya que esta encuesta contiene información relevante de los principales aspectos de las condiciones de vida de los españoles, incluyendo el alquiler. Se eligió esta encuesta porque contiene información de las viviendas y personas que arriendan un inmueble para residir en el mismo así como de las viviendas y personas que ponen a disposición un inmueble para su alquiler.
+
+En una segunda parte, se analizá la información disponible del portal inmobiliario Idealista, para así tener una perspestiva diferente de la que provee la encuesta y de esta manera poder comparar los resultados de las mismas.
+
+Por último, se creará un modelo que permmita predecir el valor del alquiler de un inmueble a partir de los datos recogidos y del análisis realizado.
+
 
 ## Encuesta de Condiciones de Vida - ECV
 
@@ -40,7 +48,7 @@ De los aspectos nombrados anteriormente, el referente a la vivienda y costes aso
 
 ### Extracción de datos
 
-Los ficheros correspondientes a la ECV, están conformados por 4 archivos en formato csv que contienen información básica y detallada de los hogares y personas. En el presente proyecto se realizará el análisis de los datos detallados de hogares y personas.
+EL INE pone a disposición del público en general los datos de la ECV, los cuales están conformados por 4 ficheros en formato csv los cuales contienen información básica y detallada de los hogares y personas encuestadas. En el presente proyecto se realizará el análisis de los datos detallados de hogares y personas.
 
 ```{r extract}
 hogares <- read.csv('../data/data_collect/enc_condiciones_vida/esudb19h.csv', header= TRUE, sep= ',', stringsAsFactors= FALSE )
@@ -49,7 +57,9 @@ personas <- read.csv('../data/data_collect/enc_condiciones_vida/esudb19p.csv', h
 
 ### Limpieza de datos
 
-Empezando por el dataframe de *hogares*, se eliminan variables intrascendentes para el objeto del presente análisis, ya que estas variables hacen referencia a datos generales de la encuesta como tal. Estas variables se detallan en la tabla a continuación.
+#### Conjunto de datos de hogares
+
+Como primer paso en el proceso de data cleaning sobre el conjunto de datos de hogares, se realizará la eliminación de un conjunto de variables que son intrascendentes para el análisis que se desea realizar, ya que son datos genéricos corerspondientes a la encuesta como tal y no aportan con información significativa para el análisis. Estas variables se detallan en la tabla a continuación.
 
 
 | Variable | Descripción |
@@ -75,11 +85,10 @@ Empezando por el dataframe de *hogares*, se eliminan variables intrascendentes p
 col_borrar_hogares <- c('HB010','HB020','HB050','HB050_F','HB060','HB060_F','HB070','HB070_F','HB080','HB080_F','HB090','HB090_F','HB100','HB100_F')
 
 # Se eliminan las variables innecesarias
-hogares %>% select(-one_of(col_borrar_hogares))
+hogares <-hogares %>% select(-one_of(col_borrar_hogares))
 ```
 
-En primer lugar, se desea analizar las características de los hogares y de las personas que alquilan una vivienda, por lo que se realiza el análisis de la variable `HH021`, la cual hace referencia al régimen de tenecia de la vivienda.
-
+El conjunto de datos de la ECV correspondiente a los hogares contiene la variable `HH021`, la cual indica el régimen de tenencia de la vivienda en la que habitan las personas residentes en los hogares encuestados. Entre las categorías de dicha variable, se tienen *En alquiler o realquiler a precio inferior al del mercado* y *En alquiler o realquiler al precio del mercado*, las cuáles serán las tomadas en cuenta para el presente análisis.
 
 ```{r}
 hogares$HH021 <- factor(hogares$HH021,levels = c(1,2,3,4,5),labels = c('En propiedad sin hipoteca','En propiedad con hipoteca','En alquiler o realquiler a precio de mercado','En alquiler o realquiler a precio inferior al de mercado','En cesión gratuita'))
@@ -89,3 +98,23 @@ g1 <- ggplot(hogares, aes(HH021)) +
   coord_flip()
 g1
 ```
+
+Para la categoría de *En alquiler o realquiler a precio de mercado* se tiene un total de `r nrow(filter(hogares, HH021 == 'En alquiler o realquiler a precio de mercado'))` registros. En el caso de la categoría de *En alquiler o realquiler a precio inferior al del mercado* se cuenta con un total de  `r nrow(filter(hogares, HH021 == 'En alquiler o realquiler a precio inferior al de mercado'))` registros. 
+
+El alquiler a precio de mercado corresponde a la cantidad que se debe pagar como contrapartida del derecho a utilizar una vivienda sin amueblar en el mercado privado, sin incluir los gastos de calefacción, electricidad, agua, etc.
+
+Por lo tanto, el conjunto de datos de Hogares será filtrado por esta dos categorías para de esta manera analizar únicamente las viviendas en régimen de tenencia de alquiler.
+
+```{r}
+hogares.alquilados <- filter(hogares, HH021 == 'En alquiler o realquiler a precio inferior al de mercado' | HH021 == 'En alquiler o realquiler a precio de mercado')
+```
+
+Luego de filtrados los datos, se cuenta con un conjunto de datos de `r nrow(hogares.alquilados)` registros.
+
+La variable que presenta el valor del alquiler de la vivienda viene denotada por el nombre de `HH060`. Revisamos si la variable contiene valores nulos con el fin de verificar si se puede imputar estos datos.
+
+```{r}
+summary(hogares.alquilados$HH060)
+```
+
+

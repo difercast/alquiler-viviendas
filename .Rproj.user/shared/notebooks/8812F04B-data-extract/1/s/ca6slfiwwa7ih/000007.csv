@@ -1,0 +1,5 @@
+"0","# Se genera un vector con las variables se eliminarán del data frame"
+"0","col_borrar_hogares <- c('HB010','HB020','HB050','HB050_F','HB060','HB060_F','HB070','HB070_F','HB080','HB080_F','HB090','HB090_F','HB100','HB100_F')"
+"0",""
+"0","# Se eliminan las variables innecesarias"
+"0","hogares <-hogares %>% select(-one_of(col_borrar_hogares))"
