@@ -12,6 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(dplyr)
 library(ggplot2)
+library(mice)
+library(VIM)
 ```
 
 
@@ -114,7 +116,28 @@ Luego de filtrados los datos, se cuenta con un conjunto de datos de `r nrow(hoga
 La variable que presenta el valor del alquiler de la vivienda viene denotada por el nombre de `HH060`. Revisamos si la variable contiene valores nulos con el fin de verificar si se puede imputar estos datos.
 
 ```{r}
-summary(hogares.alquilados$HH060)
+sum(is.na(hogares.alquilados$HH060))
+```
+
+Tomando en cuenta que existen valores nulos, y con el fin de contar con datos consolidados se realizará la imputación de los datos vacíos en la variable `HH060` que se refiere al valor del alquiler declarado. Se utilizará la imputación mediante regresión.
+
+
+```{r}
+# Imputación aquí
+```
+
+Se analiza la distribución de la variable `HH060` para las dos categorias de régimen de tenencia de la vivienda.
+
+```{r}
+#boxplot(hogares.alquilados$HH060 ~ hogares.alquilados$HH021, horizontal = TRUE,border = c("blue", "green"))
+boxplot(hogares$HH060 ~ hogares$HH021, border = c("blue", "green"))
+```
+
+
+```{r}
+summary
+hist(hogares.alquilados$HH060)
+hist(hogares$HH060)
 ```
 
 

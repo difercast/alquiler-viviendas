@@ -1,0 +1,4 @@
+"0","g2 <- ggplot(hogares.alquilados, aes(HH021)) +"
+"0","  geom_bar(fill=""steelblue"") +"
+"0","  coord_flip()"
+"0","g2"
