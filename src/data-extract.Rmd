@@ -110,7 +110,8 @@ El alquiler a precio de mercado corresponde a la cantidad que se debe pagar como
 Por lo tanto, el conjunto de datos de Hogares será filtrado por esta dos categorías para de esta manera analizar únicamente las viviendas en régimen de tenencia de alquiler.
 
 ```{r}
-hogares.alquilados <- filter(hogares, HH021 == 'En alquiler o realquiler a precio inferior al de mercado' | HH021 == 'En alquiler o realquiler a precio de mercado')
+#hogares.alquilados <- filter(hogares, HH021 == 'En alquiler o realquiler a precio inferior al de mercado' | HH021 == 'En alquiler o realquiler a precio de mercado')
+hogares.alquilados <- hogares[hogares$HH021 == 'En alquiler o realquiler a precio inferior al de mercado' | hogares$HH021 == 'En alquiler o realquiler a precio de mercado',] 
 ```
 
 Luego de filtrados los datos, se cuenta con un conjunto de datos de `r nrow(hogares.alquilados)` registros.
@@ -128,16 +129,26 @@ Tomando en cuenta que existen valores nulos, y con el fin de contar con datos co
 # Imputación aquí
 ```
 
-Se analiza la distribución de la variable `HH060` para las dos categorias de régimen de tenencia de la vivienda.
+### Análisis de la información
+
+En primer lugar se realizará el análisis de la variable `HH060`, correspondiente al valor que pagan las familias por el alquiler de una vivienda. Como se revisó anteriormente, existen dos categorías de régimen de tenecia que se analizarán: El alquiler a precio del mercado y el alquiler a precio inferior al del mercado. 
+
+Presentamos a continuación la distribución de la variable `HH060` a través de las dos categorias de regimen de tenencia mediante gráficos de cajas.
 
 ```{r}
-boxplot(hogares.alquilados$HH060 ~ hogares.alquilados$HH021, horizontal = TRUE,border = c("blue", "green"))
+ggplot(hogares.alquilados, aes(x = HH021, y = HH060, fill = HH021)) + geom_boxplot(orientation = 'x')
+```
+
+```{r}
+quantile(hogares.alquilados$HH060[hogares.alquilados$HH021 == 'En alquiler o realquiler a precio inferior al de mercado'], na.rm = TRUE)
+```
+
+```{r}
+quantile(hogares.alquilados$HH060[hogares.alquilados$HH021 == 'En alquiler o realquiler a precio de mercado'], na.rm = TRUE)
 ```
 
 
 ```{r}
-summary
 hist(hogares.alquilados$HH060)
-hist(hogares$HH060)
 ```
 

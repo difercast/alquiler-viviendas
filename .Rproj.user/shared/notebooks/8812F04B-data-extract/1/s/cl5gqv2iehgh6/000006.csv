@@ -1,4 +1,5 @@
-"0","sum(is.na(hogares.alquilados$HH060))"
+"0","sum(is.na(hogares.alquilados$HH060))
+"
 "1","[1]"
 "1"," 44"
 "1","

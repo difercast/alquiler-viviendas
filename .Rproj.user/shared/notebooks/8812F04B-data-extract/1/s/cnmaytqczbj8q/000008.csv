@@ -1,1 +1,0 @@
-"0","hogares.alquilados <- filter(hogares, HH021 == 'En alquiler o realquiler a precio inferior al de mercado' | HH021 == 'En alquiler o realquiler a precio de mercado')"
