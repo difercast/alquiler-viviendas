@@ -92,7 +92,7 @@ col_borrar_hogares <- c('HB010','HB020','HB050','HB050_F','HB060','HB060_F','HB0
 hogares <-hogares %>% select(-one_of(col_borrar_hogares))
 ```
 
-El conjunto de datos de la ECV correspondiente a los hogares contiene la variable `HH021`, la cual indica el régimen de tenencia de la vivienda en la que habitan las personas residentes en los hogares encuestados. Entre las categorías de dicha variable, se tienen *En alquiler o realquiler a precio inferior al del mercado* y *En alquiler o realquiler al precio del mercado*, las cuáles serán las tomadas en cuenta para el presente análisis.
+El conjunto de datos de la ECV correspondiente a los hogares contiene la variable `HH021`, la cual indica el régimen de tenencia de la vivienda en la que habitan las personas residentes en los hogares encuestados. Entre las categorías de dicha variable se cuenta la  siguiente: *En alquiler o realquiler al precio del mercado*. Se filtrarán los datos del conjunto de datos de hogares según esta categoría ya que es la que interesa para el desarrollo del presente estudio. Presentamos el conteo de la variable `HH021` según sus categorias.
 
 ```{r}
 hogares$HH021 <- factor(hogares$HH021,levels = c(1,2,3,4,5),labels = c('En propiedad sin hipoteca','En propiedad con hipoteca','En alquiler o realquiler a precio de mercado','En alquiler o realquiler a precio inferior al de mercado','En cesión gratuita'))
@@ -103,20 +103,17 @@ g1 <- ggplot(hogares, aes(HH021)) +
 g1
 ```
 
-Para la categoría de *En alquiler o realquiler a precio de mercado* se tiene un total de `r nrow(filter(hogares, HH021 == 'En alquiler o realquiler a precio de mercado'))` registros. En el caso de la categoría de *En alquiler o realquiler a precio inferior al del mercado* se cuenta con un total de  `r nrow(filter(hogares, HH021 == 'En alquiler o realquiler a precio inferior al de mercado'))` registros. 
+Para la categoría de *En alquiler o realquiler a precio de mercado* se tiene un total de `r nrow(filter(hogares, HH021 == 'En alquiler o realquiler a precio de mercado'))` registros. El alquiler a precio de mercado corresponde a la cantidad que se debe pagar como contrapartida del derecho a utilizar una vivienda sin amueblar en el mercado privado, sin incluir los gastos de calefacción, electricidad, agua, etc.
 
-El alquiler a precio de mercado corresponde a la cantidad que se debe pagar como contrapartida del derecho a utilizar una vivienda sin amueblar en el mercado privado, sin incluir los gastos de calefacción, electricidad, agua, etc.
-
-Por lo tanto, el conjunto de datos de Hogares será filtrado por esta dos categorías para de esta manera analizar únicamente las viviendas en régimen de tenencia de alquiler.
+Se filtra el conjunto de datos por la categoria antes mencionada.
 
 ```{r}
-#hogares.alquilados <- filter(hogares, HH021 == 'En alquiler o realquiler a precio inferior al de mercado' | HH021 == 'En alquiler o realquiler a precio de mercado')
-hogares.alquilados <- hogares[hogares$HH021 == 'En alquiler o realquiler a precio inferior al de mercado' | hogares$HH021 == 'En alquiler o realquiler a precio de mercado',] 
+hogares.alquilados <- filter(hogares, HH021 == 'En alquiler o realquiler a precio de mercado')
 ```
 
 Luego de filtrados los datos, se cuenta con un conjunto de datos de `r nrow(hogares.alquilados)` registros.
 
-La variable que presenta el valor del alquiler de la vivienda viene denotada por el nombre de `HH060`. Revisamos si la variable contiene valores nulos con el fin de verificar si se puede imputar estos datos.
+Una de las variables más importantes para el análisis del mercado del alquiler es aquella que contiene el valor pagado por el alquiler de una vivienda. Por ello es imprescindible revisar si estas variable contiene valores nulos y verificar la manera de imputar estos datos en el caso de ser necesario.
 
 ```{r}
 sum(is.na(hogares.alquilados$HH060))
@@ -131,22 +128,17 @@ Tomando en cuenta que existen valores nulos, y con el fin de contar con datos co
 
 ### Análisis de la información
 
-En primer lugar se realizará el análisis de la variable `HH060`, correspondiente al valor que pagan las familias por el alquiler de una vivienda. Como se revisó anteriormente, existen dos categorías de régimen de tenecia que se analizarán: El alquiler a precio del mercado y el alquiler a precio inferior al del mercado. 
-
-Presentamos a continuación la distribución de la variable `HH060` a través de las dos categorias de regimen de tenencia mediante gráficos de cajas.
+Se realiza el análisis de la variable `HH060`, referente al valor pagado por el alquiler de una vivienda. Utilizando un diagrama de cajas se procede a revisar la distribución de la variable para el conjunto de datos.
 
 ```{r}
-ggplot(hogares.alquilados, aes(x = HH021, y = HH060, fill = HH021)) + geom_boxplot(orientation = 'x')
-```
-
-```{r}
-quantile(hogares.alquilados$HH060[hogares.alquilados$HH021 == 'En alquiler o realquiler a precio inferior al de mercado'], na.rm = TRUE)
+ggplot(hogares.alquilados, aes(x = HH021, y = HH060, fill = HH021)) + geom_boxplot()
 ```
 
 ```{r}
 quantile(hogares.alquilados$HH060[hogares.alquilados$HH021 == 'En alquiler o realquiler a precio de mercado'], na.rm = TRUE)
 ```
 
+La mediana del valor a pagar por el alquiler de una vivienda corresponde a `r median(hogares.alquilados$HH060[hogares.alquilados$HH021 == 'En alquiler o realquiler a precio de mercado'], na.rm = TRUE) `. Se puede observar que existen valores que superan el valor del tercer cuartil.
 
 ```{r}
 hist(hogares.alquilados$HH060)
