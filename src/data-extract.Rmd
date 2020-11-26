@@ -79,7 +79,22 @@ hogares <-hogares %>% select(-one_of(col_borrar_hogares))
 
 ## Análisis exploratorio de datos
 
+La variable `HH021` de la ECV almacena el régimen de tenencia del hogar encuestado, por lo que primero se analiza como se distribuye la información dentro de esta variable.
 
+```{r graficar_hh021}
+# Se coloca los labels para ver el gráfico de manera correcta.
+hogares$HH021 <- factor(hogares$HH021,levels = c(1,2,3,4,5),labels = c('En propiedad sin hipoteca','En propiedad con hipoteca','En alquiler o realquiler a precio de mercado','En alquiler o realquiler a precio inferior al de mercado','En cesión gratuita'))
+
+# se realiza el gráfico
+g1.hh021 <- ggplot(hogares, aes(HH021)) +
+  geom_bar(fill="steelblue") +
+  geom_text(aes(label=..count..), stat='count', vjust=1, color="black", size=3.5) +
+  coord_flip()
+g1.hh021
+```
+
+
+El régimen de tenencia predominante es el de la propiedad, Para la tenencia de alquiler a precio de mercado se cuenta con un total de `2.163` registros y para el régimen de tenencia de alquiler a precio inferior al mercado se tienen 446 registros. Estos registros hacen referencia a hogares encuestados.
 
 
 
