@@ -9,4 +9,20 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+### Librerias
+
+```{r}
+library(httr)
+```
+
+### Acceso a Idealista
+
+```{r}
+path.idealista <- "https://api.idealista.com/3.5/es/search?operation=rent&propertyType=homes&center=40.41831,-3.70275&locale=es&distance=15000&apikey=N2QweTN3NzlpbXl3a2p3OG1xMHdzdTdieGN0ZDNlcDI6SFVYUWdBallWUjE3&locationId=0-EU-ES-28"
+
+
+r <- GET(url = path.idealista)
+status_code(r)
+str(content(r))
+```
 

@@ -1,2 +1,0 @@
-"0","hogares <- read.csv('../data/data_collect/enc_condiciones_vida/esudb19h.csv', header= TRUE, sep= ',', stringsAsFactors= FALSE )"
-"0","personas <- read.csv('../data/data_collect/enc_condiciones_vida/esudb19p.csv', header= TRUE, sep= ',', stringsAsFactors= FALSE )"

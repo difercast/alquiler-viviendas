@@ -16,55 +16,37 @@ library(dplyr)
 library(ggplot2)
 library(mice)
 library(VIM)
+library(FSelector)
 ```
 
+## Introducción
 
-En el presente proyecto se desea realizan un análisis sobre las fuentes de datos disponibles tanto oficiales como no oficiales con el fin de resolver las preguntas más importantes sobre el mercado del alquiler en España. Y con esto encontrar las principales patrones y también sesgos en este mercado.
+En el presente proyecto se realizará un análisis con el fin de encontrar las relaciones más importantes entre los atributos del mercado del alquiler de España y así resolver las preguntas de cuales son los patrones más importantes que tiene este mercado así como los sesgos del mismo. Para el desarrollo del proyecto de explotarán los datos de la Encuesta de Condiciones de Vida (INE, 2019), así como la información disponible del portal inmobiliario Idealista.
 
-Para ello se analizará en primer lugar la Encuesta de Condiciones de vida generada por el INE de manera anual. Ya que esta encuesta contiene información relevante de los principales aspectos de las condiciones de vida de los españoles, incluyendo el alquiler. Se eligió esta encuesta porque contiene información de las viviendas y personas que arriendan un inmueble para residir en el mismo así como de las viviendas y personas que ponen a disposición un inmueble para su alquiler.
+La Encuesta de Condiciones de Vida (ECV) es una operación estadística que se lleva a cabo de manera anual por el INE, cuyo objetivo es la producción sitemática de estadísticas comunitarias sobre la renta y las condiciones de vida de la población. Incluye datos transversales y longitudinales comparables y actualizados sobre la renta, el nivel y composición de la pobreza y la exclusión social, a escala nacional y europea. 
 
-En una segunda parte, se analizá la información disponible del portal inmobiliario Idealista, para así tener una perspestiva diferente de la que provee la encuesta y de esta manera poder comparar los resultados de las mismas.
+Entre los diferentes aspectos a los cuales la ECV está orientada, es de especial relevancia para el presente proyecto los referentes a los ingresos y situación económica de los hogares, empleo, vivienda, movimientos migratorios y nivel de formación.
 
-Por último, se creará un modelo que permmita predecir el valor del alquiler de un inmueble a partir de los datos recogidos y del análisis realizado.
+El portal inmobiliario Idealista es uno de los principales sitios web de anuncios de alquiler y venta de inmuebles, funciona en varios países europero y tiene vasta presencia en España desde hace ya varios años. Idealista pone a disposición una API pública mediante la cual se puede realizar la consulta de la información del alquiler y venta según el lugar deseado.
+
+En primer lugar, se realiza la extracción, tratamiento y exploración de los datos de la ECV.
 
 
-## Encuesta de Condiciones de Vida - ECV
+## Extracción de la información
 
-El objetivo general de la Encuesta de Condiciones de Vida (ECV) es la producción sistemática de estadísticas comunitarias sobre la renta y las condiciones de vida, que incluyan datos transversales y longitudinales comparables y actualizados sobre la renta, el nivel y composición de la pobreza y la exclusión social, a escala nacional y europea. Los microdatos que se distribuyen corresponden a la información transversal de la encuesta realizada en 2019.
+Se realiza la extracción de la información correspondiente a la Encuesta de Condiciones de Vida (ECV) obtenida desde la web oficial del INE para el periodo 2019. El INE pone a disposición del público en general los datos de la ECV, los cuales están conformados por 4 ficheros en formato csv los cuales contienen información básica y detallada de los hogares y personas encuestadas. En el presente proyecto se realizará el análisis de los datos detallados de hogares y personas.
 
-La ECV está orientada a proporcionar informaciones comparables y armonizadas sobre los siguientes aspectos del nivel y condiciones de vida y de la cohesión social.
 
-- Ingresos de los hogares privados. Situación económica.
-
-- Pobreza, privación, protección mínima e igualdad de trato.
-
-- Empleo y actividad 
-
-- Jubilaciones, pensiones y situación socioeconómica de las personas de edad.
-
-- Vivienda, costes asociados.
-
-- Desarrollo regional, movimientos migratorios.
-
-- Nivel de formación, salud y efectos de ambos sobre la condición socioeconómica.
-
-De los aspectos nombrados anteriormente, el referente a la vivienda y costes asociados son el objeto de estudio del presente proyecto, en especial para aquellas viviendas que constan con un régimen de tenencia de alquiler.
-
-### Extracción de datos
-
-EL INE pone a disposición del público en general los datos de la ECV, los cuales están conformados por 4 ficheros en formato csv los cuales contienen información básica y detallada de los hogares y personas encuestadas. En el presente proyecto se realizará el análisis de los datos detallados de hogares y personas.
-
-```{r extract}
+```{r data_extract}
 hogares <- read.csv('../data/data_collect/enc_condiciones_vida/esudb19h.csv', header= TRUE, sep= ',', stringsAsFactors= FALSE )
 personas <- read.csv('../data/data_collect/enc_condiciones_vida/esudb19p.csv', header= TRUE, sep= ',', stringsAsFactors= FALSE )
 ```
 
-### Limpieza de datos
+## Data cleaning
 
-#### Conjunto de datos de hogares
+### Conjunto de datos de *Hogares*
 
-Como primer paso en el proceso de data cleaning sobre el conjunto de datos de hogares, se realizará la eliminación de un conjunto de variables que son intrascendentes para el análisis que se desea realizar, ya que son datos genéricos corerspondientes a la encuesta como tal y no aportan con información significativa para el análisis. Estas variables se detallan en la tabla a continuación.
-
+El proceso de limpieza de la información consta de la eliminación de atributos que no son relevantes para el análisis que se realizará, más bien son atributos que cuentan con información descriptiva de la encuesta en si. Las variables a eliminar se listan a continuación:
 
 | Variable | Descripción |
 | ----------- | ----------- |
@@ -84,7 +66,7 @@ Como primer paso en el proceso de data cleaning sobre el conjunto de datos de ho
 | HB100_F | Numero de minutos empleados en cumplimentar el cuestionario sobre el hogar - Flag |
 
 
-```{r }
+```{r drop_columns_hog}
 # Se genera un vector con las variables se eliminarán del data frame
 col_borrar_hogares <- c('HB010','HB020','HB050','HB050_F','HB060','HB060_F','HB070','HB070_F','HB080','HB080_F','HB090','HB090_F','HB100','HB100_F')
 
@@ -92,55 +74,15 @@ col_borrar_hogares <- c('HB010','HB020','HB050','HB050_F','HB060','HB060_F','HB0
 hogares <-hogares %>% select(-one_of(col_borrar_hogares))
 ```
 
-El conjunto de datos de la ECV correspondiente a los hogares contiene la variable `HH021`, la cual indica el régimen de tenencia de la vivienda en la que habitan las personas residentes en los hogares encuestados. Entre las categorías de dicha variable se cuenta la  siguiente: *En alquiler o realquiler al precio del mercado*. Se filtrarán los datos del conjunto de datos de hogares según esta categoría ya que es la que interesa para el desarrollo del presente estudio. Presentamos el conteo de la variable `HH021` según sus categorias.
-
-```{r}
-hogares$HH021 <- factor(hogares$HH021,levels = c(1,2,3,4,5),labels = c('En propiedad sin hipoteca','En propiedad con hipoteca','En alquiler o realquiler a precio de mercado','En alquiler o realquiler a precio inferior al de mercado','En cesión gratuita'))
-
-g1 <- ggplot(hogares, aes(HH021)) +
-  geom_bar(fill="steelblue") +
-  coord_flip()
-g1
-```
-
-Para la categoría de *En alquiler o realquiler a precio de mercado* se tiene un total de `r nrow(filter(hogares, HH021 == 'En alquiler o realquiler a precio de mercado'))` registros. El alquiler a precio de mercado corresponde a la cantidad que se debe pagar como contrapartida del derecho a utilizar una vivienda sin amueblar en el mercado privado, sin incluir los gastos de calefacción, electricidad, agua, etc.
-
-Se filtra el conjunto de datos por la categoria antes mencionada.
-
-```{r}
-hogares.alquilados <- filter(hogares, HH021 == 'En alquiler o realquiler a precio de mercado')
-```
-
-Luego de filtrados los datos, se cuenta con un conjunto de datos de `r nrow(hogares.alquilados)` registros.
-
-Una de las variables más importantes para el análisis del mercado del alquiler es aquella que contiene el valor pagado por el alquiler de una vivienda. Por ello es imprescindible revisar si estas variable contiene valores nulos y verificar la manera de imputar estos datos en el caso de ser necesario.
-
-```{r}
-sum(is.na(hogares.alquilados$HH060))
-```
-
-Tomando en cuenta que existen valores nulos, y con el fin de contar con datos consolidados se realizará la imputación de los datos vacíos en la variable `HH060` que se refiere al valor del alquiler declarado. Se utilizará la imputación mediante regresión.
 
 
-```{r}
-# Imputación aquí
-```
 
-### Análisis de la información
+## Análisis exploratorio de datos
 
-Se realiza el análisis de la variable `HH060`, referente al valor pagado por el alquiler de una vivienda. Utilizando un diagrama de cajas se procede a revisar la distribución de la variable para el conjunto de datos.
 
-```{r}
-ggplot(hogares.alquilados, aes(x = HH021, y = HH060, fill = HH021)) + geom_boxplot()
-```
 
-```{r}
-quantile(hogares.alquilados$HH060[hogares.alquilados$HH021 == 'En alquiler o realquiler a precio de mercado'], na.rm = TRUE)
-```
 
-La mediana del valor a pagar por el alquiler de una vivienda corresponde a `r median(hogares.alquilados$HH060[hogares.alquilados$HH021 == 'En alquiler o realquiler a precio de mercado'], na.rm = TRUE) `. Se puede observar que existen valores que superan el valor del tercer cuartil.
 
-```{r}
-hist(hogares.alquilados$HH060)
-```
+
+
 
