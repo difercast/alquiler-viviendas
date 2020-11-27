@@ -16,8 +16,7 @@ library(dplyr)
 library(ggplot2)
 library(mice)
 library(VIM)
-library(FSelector)
-library(hrbrthemes)
+library(gridExtra)
 ```
 
 ## Introducción
@@ -118,47 +117,56 @@ Existen `r sum(is.na(hogares.alquiler$HH060))` valores vacios o nulos para la va
 Se analiza la distribución del precio del alquiler de las viviendas utilizando un diagrama de cajas.
 
 ```{r}
-ggplot(hogares.alquilados, aes(x = HH021, y = HH060, fill = HH021)) + geom_boxplot()
+ggplot(data = subset(hogares.alquiler, !is.na(HH060)), aes(x = HH021, y = HH060, fill = HH021)) + geom_boxplot()
 ```
 
-Se observa que La mediana del valor a pagar por el alquiler de una vivienda corresponde a `r median(hogares.alquilados$HH060[hogares.alquilados$HH021 == 'En alquiler o realquiler a precio de mercado'], na.rm = TRUE) `. Se puede observar que existen valores que superan el valor del tercer cuartil, por lo que se consideran como outliers, no se realizara la imputación de dichos valores ya que se entiende que existen ciertos casos en donde dependiendo de las características de las viviendas el valor del alquiler es muy elevado.
+Se observa que La mediana del valor a pagar por el alquiler de una vivienda corresponde a `r median(hogares.alquiler$HH060[hogares.alquiler$HH021 == 'En alquiler o realquiler a precio de mercado'], na.rm = TRUE) `. Se puede observar que existen valores que superan el valor del tercer cuartil, por lo que se consideran como outliers, no se realizara la imputación de dichos valores ya que se entiende que existen ciertos casos en donde dependiendo de las características de las viviendas el valor del alquiler es muy elevado.
 
 ### Precio del alquiler vs rentas de la vivienda
 
 ```{r}
-g1.hh060hy020 <- ggplot(data = hogares.alquiler) + 
+g1.hh060hy020 <- ggplot(data = subset(hogares.alquiler, !is.na(HH060))) + 
   geom_point(aes(HH060, HY020))
 g1.hh060hy020
 ```
 
 
-
 ### Precio del alquiler vs Nacionalidad
 
-Se realiza la unión entre los conjuntos de datos de hogares y los conjuntos de datos de personas, para realizar el análisis de las características del mercado del alquiler.
+Previo al análisis del precio del alquiler de viviendas por nacionalidad de los arrendatarios, se realiza la unión de los conjuntos datos de hogares y personas, con el fin de lograr identificar a las personas que residen en una vivienda alquilada.
 
 ```{r}
 # Se genera la variable con el identificador de la vivienda
 personas <- personas %>% mutate(HB030 = as.integer(substr(PB030,1,nchar(PB030)-2)))
 
+# Se genera un nuevo dataset resultado del join entre personas y hogares y se filtran solo las personas con un régimen de tenencia de alquiler. 
 personas <- left_join(personas, hogares.alquiler, by ='HB030', copy =FALSE)
 personas.alquiler <- filter(personas, HH021 == 'En alquiler o realquiler a precio de mercado')
 
+# Se genera el factor para verificar los labels d enacionalidad de las personas.
 personas.alquiler$PB210 <- factor(personas.alquiler$PB210,levels =c(1,2,3), labels =c('España','Extranjero (resto de la unión europea)','Extranjero (resto del mundo)'))
 ```
 
+En la ECV, las nacionalidad se agrupa en 3 categorías que son: personas que nacidas en España, personas que nacieron en países miembros de la Unión Europea y personas nacidas en el resto de países dle mundo. Se analiza la distribución del precio de las viviendas por nacionalidad así como el número de personas que viven bajo un régimen de tenencial de alquiler por nacionalidad. 
 
 ```{r}
-g1.nacionalidad <- ggplot(personas.alquiler, aes(x=carrier, y= dep_delay)) + 
-        geom_boxplot()
+g.nacionalidad <- ggplot(data = subset(personas.alquiler, !is.na(PB210)), aes(PB210, HH060)) +
+  geom_boxplot() +
+  ggtitle('Precio del alquiler por nacionalidad')
 
-g1.nacionalidad <- ggplot(data = subset(personas.alquiler, !is.na(PB210)), aes(PB210, HH060)) +
-  geom_boxplot() 
-g1.nacionalidad
+g.nacionalidadCount <- ggplot(data = subset(personas.alquiler, !is.na(PB210)),aes(PB210) ) +
+  geom_bar(fill="steelblue") +
+  geom_text(aes(label=..count..), stat='count', vjust=1, color="black", size=3.5) +
+  ggtitle('Alquiler por Nacionalidad')
+
+grid.arrange(g.nacionalidad, g.nacionalidadCount, ncol=2)
 ```
 
+Se puede observar que para los 3 grupos de tipos de personas residentes se tiene una medianda similar, lo que indica que la las personas que viven pagando un alquiler pagan casí lo mismo independientemente de su status migratorio. En el caso del número de personas, se tiene que las personas españolas cuentan con mas presencia en el mercado del alquiler con un total del 50,4%, en cambio las personas extranjeras que no pertenencen a países miembros de la Unión Europea cuentan con una proporción del 41,9% y por último, las personas extranjeras que vienen de países de la Unión Europea representan el 7,62%. 
 
 ### Precio del alquiler por el grupo de edad
+
+En la ECV, encontramos el año de nacimiento de las personas encuestadas, a partir de dicho valor se calcula la edad a la fecha de la encuesta y se genera una nueva variable que contiene la edad de las personas agrupadas por las categorías: Menor de 30 años o mayor o igual a 30 años.
 
 ```{r}
 personas.alquiler <- personas.alquiler %>% mutate(edad = PB110 - PB140)
@@ -167,12 +175,22 @@ personas.alquiler <- personas.alquiler %>% mutate(grupos.edad = case_when(edad <
 ```
 
 
-Gráfico
+Se analiza mediante gráficos, cuál es la distribución del precio del alquiler de viviendas para las personas según su grupo de edad. Además, se analiza el número de personas por cada uno de estos grupos.
 
 ```{r}
+g1.Edad <- ggplot(data = subset(personas.alquiler, !is.na(grupos.edad)), aes(grupos.edad, HH060)) +
+  geom_boxplot() +
+  ggtitle('Precio del alquiler por grupos de edad')
 
-g1.gruposEdad <- ggplot(data = subset(personas.alquiler, !is.na(grupos.edad)), aes(grupos.edad, HH060)) +
-  geom_boxplot() 
-g1.gruposEdad
+g.edadCount <- ggplot(personas.alquiler,aes(grupos.edad) ) +
+  geom_bar(fill="steelblue") +
+  geom_text(aes(label=..count..), stat='count', vjust=1, color="black", size=3.5) +
+  ggtitle('Alquiler por grupos de edad')
+
+grid.arrange(g1.Edad, g.edadCount, ncol=2)
 ```
+
+Se observa que independientemente de los grupos de edad, el precio del alquiler es similar, aunque en los hogares encuestados se observa una mayor presencia de personas con una edad igual o mayor de 30 años.
+
+### Número de habitantes por hogar
 
