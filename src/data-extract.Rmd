@@ -17,6 +17,7 @@ library(ggplot2)
 library(mice)
 library(VIM)
 library(FSelector)
+library(hrbrthemes)
 ```
 
 ## Introducción
@@ -79,6 +80,8 @@ hogares <-hogares %>% select(-one_of(col_borrar_hogares))
 
 ## Análisis exploratorio de datos
 
+### Régimen de tenencia
+
 La variable `HH021` de la ECV almacena el régimen de tenencia del hogar encuestado, por lo que primero se analiza como se distribuye la información dentro de esta variable.
 
 ```{r graficar_hh021}
@@ -94,10 +97,82 @@ g1.hh021
 ```
 
 
-El régimen de tenencia predominante es el de la propiedad, Para la tenencia de alquiler a precio de mercado se cuenta con un total de `2.163` registros y para el régimen de tenencia de alquiler a precio inferior al mercado se tienen 446 registros. Estos registros hacen referencia a hogares encuestados.
+El régimen de tenencia predominante es el de la propiedad con un total de `12.456` hogares encuestados que corresponde al `78.4%` del total de la población de la encuesta. El motivo del presente análisis son aquellas viviendas que están en un régimen de alquiler, en donde se tiene que la tenencia de alquiler a precio de mercado se cuenta con un total de `2.163` registros que corresponde al `13,61%` y para el régimen de tenencia de alquiler a precio inferior al mercado se tienen `446` registros que equivale al `2,8%`. 
+
+El objetivo del presente proyecto es realizar el análisis de los hogares y las personas que residen en esos hogares en un régimen de tenencia de alquiler. No se toma en cuenta para el análisis los registro que corresponden a los hogares con un régimen de tenencia de alquiler a precio inferior al mercado, ya que dichos precios pueden afectar el valor real del mercado del alquiler.
+
+```{r}
+hogares.alquiler <- filter(hogares, HH021 == 'En alquiler o realquiler a precio de mercado')
+```
+
+### Precio del alquiler
+
+La variable con más relevancia del conjunto de datos, es aquella que contiene el valor que las familias pagan por el alquiler de una vivienda en la que residen. Dentro del conjunto de datos, esta variable se denota como `HH060`. Se analiza en primera instancia si dentro de los hogares con tenencia en alquiler se tienen valores nulos.
+
+```{r}
+sum(is.na(hogares.alquiler$HH060))
+```
+
+Existen `r sum(is.na(hogares.alquiler$HH060))` valores vacios o nulos para la variable HH060, se aplicará en este caso la imputación por ...
+
+Se analiza la distribución del precio del alquiler de las viviendas utilizando un diagrama de cajas.
+
+```{r}
+ggplot(hogares.alquilados, aes(x = HH021, y = HH060, fill = HH021)) + geom_boxplot()
+```
+
+Se observa que La mediana del valor a pagar por el alquiler de una vivienda corresponde a `r median(hogares.alquilados$HH060[hogares.alquilados$HH021 == 'En alquiler o realquiler a precio de mercado'], na.rm = TRUE) `. Se puede observar que existen valores que superan el valor del tercer cuartil, por lo que se consideran como outliers, no se realizara la imputación de dichos valores ya que se entiende que existen ciertos casos en donde dependiendo de las características de las viviendas el valor del alquiler es muy elevado.
+
+### Precio del alquiler vs rentas de la vivienda
+
+```{r}
+g1.hh060hy020 <- ggplot(data = hogares.alquiler) + 
+  geom_point(aes(HH060, HY020))
+g1.hh060hy020
+```
 
 
 
+### Precio del alquiler vs Nacionalidad
+
+Se realiza la unión entre los conjuntos de datos de hogares y los conjuntos de datos de personas, para realizar el análisis de las características del mercado del alquiler.
+
+```{r}
+# Se genera la variable con el identificador de la vivienda
+personas <- personas %>% mutate(HB030 = as.integer(substr(PB030,1,nchar(PB030)-2)))
+
+personas <- left_join(personas, hogares.alquiler, by ='HB030', copy =FALSE)
+personas.alquiler <- filter(personas, HH021 == 'En alquiler o realquiler a precio de mercado')
+
+personas.alquiler$PB210 <- factor(personas.alquiler$PB210,levels =c(1,2,3), labels =c('España','Extranjero (resto de la unión europea)','Extranjero (resto del mundo)'))
+```
 
 
+```{r}
+g1.nacionalidad <- ggplot(personas.alquiler, aes(x=carrier, y= dep_delay)) + 
+        geom_boxplot()
+
+g1.nacionalidad <- ggplot(data = subset(personas.alquiler, !is.na(PB210)), aes(PB210, HH060)) +
+  geom_boxplot() 
+g1.nacionalidad
+```
+
+
+### Precio del alquiler por el grupo de edad
+
+```{r}
+personas.alquiler <- personas.alquiler %>% mutate(edad = PB110 - PB140)
+personas.alquiler <- personas.alquiler %>% mutate(grupos.edad = case_when(edad <30 ~ 'Menor de 30',
+                                                                          edad >=30 ~ 'Mayor o igual a 30'))
+```
+
+
+Gráfico
+
+```{r}
+
+g1.gruposEdad <- ggplot(data = subset(personas.alquiler, !is.na(grupos.edad)), aes(grupos.edad, HH060)) +
+  geom_boxplot() 
+g1.gruposEdad
+```
 
