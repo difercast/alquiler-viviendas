@@ -1,5 +1,5 @@
 ---
-title: "extracción de datos"
+title: "Mercado del alquiler"
 author: "Diego Castillo"
 date: "13/11/2020"
 output:
@@ -194,11 +194,13 @@ Se observa que independientemente de los grupos de edad, el precio del alquiler 
 
 ### Número de habitantes por hogar
 
-Verificamos a continuación la media del número de personas que habitan en un hogar con régimen de tenencia alquiler.
+Se visualiza el número de personas mayores de 16 años que habitan en un hogar alquilado.
 
 ```{r}
-
+mean(personas.alquiler$HX040)
 ```
+
+Se tiene una media de 3.12 personas residentes en viviendas con un régimen de tenencia de alquiler. 
 
 
 ### Alquiler por nivel de instrucción de las personas
