@@ -194,3 +194,36 @@ Se observa que independientemente de los grupos de edad, el precio del alquiler 
 
 ### Número de habitantes por hogar
 
+Verificamos a continuación la media del número de personas que habitan en un hogar con régimen de tenencia alquiler.
+
+```{r}
+
+```
+
+
+### Alquiler por nivel de instrucción de las personas
+
+```{r}
+# Se genera el factor para verificar los labels de los niveles de instrucción de las personas
+personas.alquiler <- personas.alquiler %>% mutate(nivel.educacion = substr(PE040,1,1))
+personas.alquiler$nivel.educacion <- factor(personas.alquiler$nivel.educacion, levels = c('0','1','2','3','4','5'), labels = c('Sin educación','Primaria','1ra etapa  Secundaria','2da etapa Secundaria','Postsecundaria','Superior') ) 
+
+g.educacion <- ggplot(data = subset(personas.alquiler, !is.na(nivel.educacion)), aes(nivel.educacion, HH060)) +
+  geom_boxplot() +
+  ggtitle('Precio del alquiler por educación')
+
+
+g.educacionCount <- ggplot(data = subset(personas.alquiler, !is.na(nivel.educacion)),aes(nivel.educacion) ) +
+  geom_bar(fill="steelblue") +
+  geom_text(aes(label=..count..), stat='count', vjust=1, color="black", size=3.5) +
+  ggtitle('Alquiler por nivel de educación')
+
+grid.arrange(g.educacion, g.educacionCount, nrow=2)
+
+```
+
+
+Se puede observar que el valor que pagan las personas por un alquiler, varía deacuerdo al nivel de educación que posean. Entre más alto el nivel de educación más pagan por el alquiler de una vivienda. Aunque se puede entender que, al poseer una persona un nivel de educación más alto puede también tenes más ingresos que una personas que no cuenta con un nivel de educación y por lo tanto puede pagar más por un alquiler.
+
+# Precio del alquiler por Comunidad autónoma
+
