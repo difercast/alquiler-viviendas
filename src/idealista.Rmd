@@ -15,16 +15,42 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(httr)
+library(jsonlite)
 ```
 
 ### Acceso a Idealista
 
+
 ```{r}
-path.idealista <- "https://api.idealista.com/3.5/es/search?operation=rent&propertyType=homes&center=40.41831,-3.70275&locale=es&distance=15000&apikey=N2QweTN3NzlpbXl3a2p3OG1xMHdzdTdieGN0ZDNlcDI6SFVYUWdBallWUjE3&locationId=0-EU-ES-28"
+
+consumer_key <- "7d0y3w79imywkjw8mq0wsu7bxctd3ep2"
+consumer_secret <- "HUXQgAjYVR17"
+
+#Use basic auth
+secret <- jsonlite::base64_enc(paste(consumer_key, consumer_secret, sep = ":"))
+req <- httr::POST("https://api.idealista.com/oauth/token",
+                  httr::add_headers(
+                    "Authorization" = paste("Basic", gsub("\n", "", secret)),
+                    "Content-Type" = "application/x-www-form-urlencoded;charset=UTF-8"
+                  ),
+                  body = "grant_type=client_credentials"
+)
 
 
-r <- GET(url = path.idealista)
-status_code(r)
-str(content(r))
+#Extract the access token
+token <- paste("Bearer", httr::content(req)$access_token)
+
+url<-"http://api.idealista.com/3.5/es/search?center=40.42938099999995,-3.7097526269835726&country=es&maxItems=50&numPage=1&distance=452&propertyType=homes&operation=sale"
+req <- httr::POST(url, httr::add_headers("Authorization" = token))
+
+```
+
+
+```{r}
+raise <- content(req, "text")
+cat(content(req, "text"), "\n")
+
+new <- fromJSON(raise)
+head(new$elementList$price)
 ```
 
