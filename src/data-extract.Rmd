@@ -11,7 +11,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r paquetes message =FALSE}
 library(dplyr)
 library(ggplot2)
 library(mice)
@@ -44,44 +44,26 @@ personas <- read.csv('../data/data_collect/enc_condiciones_vida/esudb19p.csv', h
 
 ## Data cleaning
 
-### Conjunto de datos de *Hogares*
+### Selecciónd de atributos
 
-El proceso de limpieza de la información consta de la eliminación de atributos que no son relevantes para el análisis que se realizará, más bien son atributos que cuentan con información descriptiva de la encuesta en si. Las variables a eliminar se listan a continuación:
+En un primer paso de limpieza de datos, se realiza la eliminación de aquellos atributos que no aportan o no son suficientemente relevantes para los análisis que se desean realizar en el presente proyecto.
 
-| Variable | Descripción |
-| ----------- | ----------- |
-| HB010 | Año de la encuesta |
-| HB020 | País |
-| HB050 | Mes de la entrevista |
-| HB050_F | Mes de la entrevista - Flag |
-| HB060 | Año de la entrevista |
-| HB060_F | Año de la entrevista - Flag |
-| HB070 | Identificación personal del informante del cuestionario sobre el hogar |
-| HB070_F | Identificación personal del informante del cuestionario sobre el hogar - Flag |
-| HB080 | Identificación de la primera persona responsable de la vivienda |
-| HB080_F | Identificación de la primera persona responsable de la vivienda - Flag |
-| HB090 | Identificación de la segunda persona responsable de la vivienda |
-| HB090_F | Identificación de la segunda persona responsable de la vivienda - Flag |
-| HB100 | Numero de minutos empleados en cumplimentar el cuestionario sobre el hogar |
-| HB100_F | Numero de minutos empleados en cumplimentar el cuestionario sobre el hogar - Flag |
+```{r dropCol}
+# Eliminación de columnas del dataset de  Hogares
+AttrDelHog <- read.csv('../data/data_collect/enc_condiciones_vida/variables_eliminar_hogares.csv', header= TRUE, sep= ',')
+hogaresClean <-hogares %>% select(-one_of(AttrDelHog$var))
 
-
-```{r drop_columns_hog}
-# Se genera un vector con las variables se eliminarán del data frame
-col_borrar_hogares <- c('HB010','HB020','HB050','HB050_F','HB060','HB060_F','HB070','HB070_F','HB080','HB080_F','HB090','HB090_F','HB100','HB100_F')
-
-# Se eliminan las variables innecesarias
-hogares <-hogares %>% select(-one_of(col_borrar_hogares))
+# Eliminación de columnas del dataset de Personas
+DelPer <- read.csv('../data/data_collect/enc_condiciones_vida/variables_eliminar_personas.csv', header= TRUE, sep= ',')
+personasClean <- personas %>% select(-one_of(DelPer$var))
 ```
-
-
 
 
 ## Análisis exploratorio de datos
 
 ### Régimen de tenencia
 
-La variable `HH021` de la ECV almacena el régimen de tenencia del hogar encuestado, por lo que primero se analiza como se distribuye la información dentro de esta variable.
+Se verifica en primera instancia, el régimen de tenencia de las viviendas encuestadas.
 
 ```{r graficar_hh021}
 # Se coloca los labels para ver el gráfico de manera correcta.
