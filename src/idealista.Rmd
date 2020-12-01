@@ -40,7 +40,7 @@ req <- httr::POST("https://api.idealista.com/oauth/token",
 #Extract the access token
 token <- paste("Bearer", httr::content(req)$access_token)
 
-url<-"http://api.idealista.com/3.5/es/search?center=40.42938099999995,-3.7097526269835726&country=es&maxItems=50&numPage=1&distance=452&propertyType=homes&operation=sale"
+url<-"http://api.idealista.com/3.5/es/search?center=40.42938099999995,-3.7097526269835726&country=es&maxItems=500&numPage=1&distance=1000&propertyType=homes&operation=rent"
 req <- httr::POST(url, httr::add_headers("Authorization" = token))
 
 ```
