@@ -63,17 +63,20 @@ personasClean <- personas %>% select(-one_of(DelPer$var))
 
 ### Régimen de tenencia
 
-Se verifica en primera instancia, el régimen de tenencia de las viviendas encuestadas.
+Se verifica en primera instancia, el régimen de tenencia de las viviendas encuestadas, para determinar cual es el porcentaje de viviendas que tienen un régimen de alquiler.
+
 
 ```{r graficar_hh021}
-# Se coloca los labels para ver el gráfico de manera correcta.
-hogares$HH021 <- factor(hogares$HH021,levels = c(1,2,3,4,5),labels = c('En propiedad sin hipoteca','En propiedad con hipoteca','En alquiler o realquiler a precio de mercado','En alquiler o realquiler a precio inferior al de mercado','En cesión gratuita'))
+# Se convierte la variable en Factor.
+hogaresClean$HH021 <- factor(hogaresClean$HH021,levels = c(1,2,3,4,5),labels = c('Propiedad sin hipoteca','Propiedad con hipoteca','Alquiler a precio de mercado','Alquiler  a precio inferior al de mercado','Cesión gratuita'))
 
-# se realiza el gráfico
-g1.hh021 <- ggplot(hogares, aes(HH021)) +
+# Grafico
+g1.hh021 <- ggplot(hogaresClean, aes(HH021)) +
   geom_bar(fill="steelblue") +
   geom_text(aes(label=..count..), stat='count', vjust=1, color="black", size=3.5) +
-  coord_flip()
+  coord_flip() +
+  ggtitle("Régimen de tenencia de la vivienda") +
+  xlab("Viviendas") + ylab("Régimen de tenencia")
 g1.hh021
 ```
 
@@ -83,33 +86,80 @@ El régimen de tenencia predominante es el de la propiedad con un total de `12.4
 El objetivo del presente proyecto es realizar el análisis de los hogares y las personas que residen en esos hogares en un régimen de tenencia de alquiler. No se toma en cuenta para el análisis los registro que corresponden a los hogares con un régimen de tenencia de alquiler a precio inferior al mercado, ya que dichos precios pueden afectar el valor real del mercado del alquiler.
 
 ```{r}
-hogares.alquiler <- filter(hogares, HH021 == 'En alquiler o realquiler a precio de mercado')
+hogaresAlquiler <- filter(hogaresClean, HH021 == 'Alquiler a precio de mercado')
 ```
 
 ### Precio del alquiler
 
-La variable con más relevancia del conjunto de datos, es aquella que contiene el valor que las familias pagan por el alquiler de una vivienda en la que residen. Dentro del conjunto de datos, esta variable se denota como `HH060`. Se analiza en primera instancia si dentro de los hogares con tenencia en alquiler se tienen valores nulos.
+La variable `HH060` es uno de los atributos más relevantes del dataset, ya que contiene el valor que las familias pagan por el alquiler de la vivienda en la que residen. Se verifica la existencia de valores nulos o perdidos
+
 
 ```{r}
-sum(is.na(hogares.alquiler$HH060))
+sum(is.na(hogaresAlquiler$HH060))
 ```
 
 Existen `r sum(is.na(hogares.alquiler$HH060))` valores vacios o nulos para la variable HH060, se aplicará en este caso la imputación por ...
 
-Se analiza la distribución del precio del alquiler de las viviendas utilizando un diagrama de cajas.
+Se analiza a continuación la distribución de los valores del precio del alquiler de las viviendas mediante un diagrama de cajas.
 
 ```{r}
-ggplot(data = subset(hogares.alquiler, !is.na(HH060)), aes(x = HH021, y = HH060, fill = HH021)) + geom_boxplot()
+ggplot(data = subset(hogaresAlquiler, !is.na(HH060)), aes(x = HH021, y = HH060, fill = HH021)) + geom_boxplot() +
+  ggtitle("Distribución del precio del alquiler") +
+  xlab("") + ylab("Alquiler")
 ```
 
 Se observa que La mediana del valor a pagar por el alquiler de una vivienda corresponde a `r median(hogares.alquiler$HH060[hogares.alquiler$HH021 == 'En alquiler o realquiler a precio de mercado'], na.rm = TRUE) `. Se puede observar que existen valores que superan el valor del tercer cuartil, por lo que se consideran como outliers, no se realizara la imputación de dichos valores ya que se entiende que existen ciertos casos en donde dependiendo de las características de las viviendas el valor del alquiler es muy elevado.
 
-### Precio del alquiler vs rentas de la vivienda
+### Precio del alquiler vs rentas netas de la vivienda
 
 ```{r}
-g1.hh060hy020 <- ggplot(data = subset(hogares.alquiler, !is.na(HH060))) + 
-  geom_point(aes(HH060, HY020))
-g1.hh060hy020
+g1.rentasN <- ggplot(data = subset(hogaresAlquiler, !is.na(HH060))) + 
+  geom_point(aes(HH060, HY020)) +
+  ggtitle("Precio del alquiler vs renta neta") +
+  xlab("Precio del alquiler") + ylab("Rentas Netas")
+g1.rentasN
+```
+
+
+### Tipo de vivienda
+
+```{r}
+# Se convierte la variable en Factor.
+hogaresAlquiler$HH010 <- factor(hogaresAlquiler$HH010,levels = c(1,2,3,4),labels = c('Vivienda unifamiliar independiente','Vivienda unifamiliar adosada o pareada','Piso o apartamento en un edificio con menos de 10 viviendas','Piso o apartamento en un  edificio con 10 viviendas o más'))
+
+# Grafico
+g.TipoViv <- ggplot(data = subset(hogaresAlquiler, !is.na(HH010)), aes(HH010)) +
+  geom_bar(fill="steelblue") +
+  geom_text(aes(label=..count..), stat='count', vjust=1, color="black", size=3.5) +
+  coord_flip() +
+  ggtitle("Tipo de vivienda") +
+  xlab("Tipo de vivienda") + ylab("Viviendas")
+g.TipoViv
+```
+
+### Número de habitantes por hogar
+
+Se visualiza el número de personas mayores de 16 años que habitan en un hogar alquilado.
+
+```{r}
+mean(personas.alquiler$HX040)
+```
+
+Se tiene una media de `r mean(personas.alquiler$HX040)` personas residentes en viviendas con un régimen de tenencia de alquiler. 
+
+### Hogares en alquiler en riesgo de pobreza
+
+```{r}
+hogaresAlquiler$vhPobreza <- factor(hogaresAlquiler$vhPobreza,levels = c(1,0),labels = c('Si','No'))
+
+# Grafico
+g.HogPob <- ggplot(data = subset(hogaresAlquiler, !is.na(vhPobreza)), aes(vhPobreza)) +
+  geom_bar(fill="steelblue") +
+  geom_text(aes(label=..count..), stat='count', vjust=1, color="black", size=3.5) +
+  coord_flip() +
+  ggtitle("Hogares en riesgo de pobreza") +
+  xlab("Riesgo de pobreza") + ylab("Viviendas")
+g.HogPob
 ```
 
 
@@ -173,16 +223,6 @@ grid.arrange(g1.Edad, g.edadCount, ncol=2)
 ```
 
 Se observa que independientemente de los grupos de edad, el precio del alquiler es similar, aunque en los hogares encuestados se observa una mayor presencia de personas con una edad igual o mayor de 30 años.
-
-### Número de habitantes por hogar
-
-Se visualiza el número de personas mayores de 16 años que habitan en un hogar alquilado.
-
-```{r}
-mean(personas.alquiler$HX040)
-```
-
-Se tiene una media de 3.12 personas residentes en viviendas con un régimen de tenencia de alquiler. 
 
 
 ### Alquiler por nivel de instrucción de las personas
