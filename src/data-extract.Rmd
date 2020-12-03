@@ -11,7 +11,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r paquetes message =FALSE}
+```{r paquetes }
 library(dplyr)
 library(ggplot2)
 library(mice)
@@ -40,6 +40,7 @@ Se realiza la extracción de la información correspondiente a la Encuesta de Co
 ```{r data_extract}
 hogares <- read.csv('../data/data_collect/enc_condiciones_vida/esudb19h.csv', header= TRUE, sep= ',', stringsAsFactors= FALSE )
 personas <- read.csv('../data/data_collect/enc_condiciones_vida/esudb19p.csv', header= TRUE, sep= ',', stringsAsFactors= FALSE )
+hogaresBasic <- read.csv('../data/data_collect/enc_condiciones_vida/esudb19d.csv', header= TRUE, sep= ',', stringsAsFactors= FALSE )
 ```
 
 ## Data cleaning
@@ -98,7 +99,7 @@ La variable `HH060` es uno de los atributos más relevantes del dataset, ya que 
 sum(is.na(hogaresAlquiler$HH060))
 ```
 
-Existen `r sum(is.na(hogares.alquiler$HH060))` valores vacios o nulos para la variable HH060, se aplicará en este caso la imputación por ...
+Existen `r sum(is.na(hogaresAlquiler$HH060))` valores vacios o nulos para la variable HH060, se aplicará en este caso la imputación por ...
 
 Se analiza a continuación la distribución de los valores del precio del alquiler de las viviendas mediante un diagrama de cajas.
 
@@ -108,7 +109,7 @@ ggplot(data = subset(hogaresAlquiler, !is.na(HH060)), aes(x = HH021, y = HH060, 
   xlab("") + ylab("Alquiler")
 ```
 
-Se observa que La mediana del valor a pagar por el alquiler de una vivienda corresponde a `r median(hogares.alquiler$HH060[hogares.alquiler$HH021 == 'En alquiler o realquiler a precio de mercado'], na.rm = TRUE) `. Se puede observar que existen valores que superan el valor del tercer cuartil, por lo que se consideran como outliers, no se realizara la imputación de dichos valores ya que se entiende que existen ciertos casos en donde dependiendo de las características de las viviendas el valor del alquiler es muy elevado.
+Se observa que La mediana del valor a pagar por el alquiler de una vivienda corresponde a `r median(hogaresAlquiler$HH060[hogaresAlquiler$HH021 == 'En alquiler o realquiler a precio de mercado'], na.rm = TRUE) `. Se puede observar que existen valores que superan el valor del tercer cuartil, por lo que se consideran como outliers, no se realizara la imputación de dichos valores ya que se entiende que existen ciertos casos en donde dependiendo de las características de las viviendas el valor del alquiler es muy elevado.
 
 ### Precio del alquiler vs rentas netas de la vivienda
 
@@ -136,16 +137,6 @@ g.TipoViv <- ggplot(data = subset(hogaresAlquiler, !is.na(HH010)), aes(HH010)) +
   xlab("Tipo de vivienda") + ylab("Viviendas")
 g.TipoViv
 ```
-
-### Número de habitantes por hogar
-
-Se visualiza el número de personas mayores de 16 años que habitan en un hogar alquilado.
-
-```{r}
-mean(personas.alquiler$HX040)
-```
-
-Se tiene una media de `r mean(personas.alquiler$HX040)` personas residentes en viviendas con un régimen de tenencia de alquiler. 
 
 ### Hogares en alquiler en riesgo de pobreza
 
@@ -249,5 +240,34 @@ grid.arrange(g.educacion, g.educacionCount, nrow=2)
 
 Se puede observar que el valor que pagan las personas por un alquiler, varía deacuerdo al nivel de educación que posean. Entre más alto el nivel de educación más pagan por el alquiler de una vivienda. Aunque se puede entender que, al poseer una persona un nivel de educación más alto puede también tenes más ingresos que una personas que no cuenta con un nivel de educación y por lo tanto puede pagar más por un alquiler.
 
-# Precio del alquiler por Comunidad autónoma
+### Número de habitantes por hogar
+
+Se visualiza el número de personas mayores de 16 años que habitan en un hogar alquilado.
+
+```{r}
+mean(personasAlquiler$HX040)
+```
+
+Se tiene una media de `r mean(personasAlquiler$HX040)` personas residentes en viviendas con un régimen de tenencia de alquiler. 
+
+### Alquiler por Región
+
+```{r}
+# Se realiza un Join con el dataframe que contiene los datos de las regiones
+hogaresBasic <- hogaresBasic %>% rename(HB030 = DB030)
+personasAlquiler <- left_join(personasAlquiler, hogaresBasic, by ='HB030', copy =FALSE)
+
+# Se genera los nombres de las reiones para la presentación
+personasAlquiler$DB040 <- factor(personasAlquiler$DB040,levels = c('ES11','ES12','ES13','ES21','ES22','ES23','ES24','ES30','ES41','ES42','ES43','ES51','ES52','ES53','ES61','ES62','ES63','ES64','ES70','ESZZ','ES11','ES12','ES13','ES21','ES22','ES23','ES24','ES30','ES41','ES42','ES43','ES51','ES52','ES53','ES61','ES62','ES63','ES64','ES70','ESZZ'),labels = c('Galicia','Principado de Asturias','Cantabria','País Vasco','Comunidad Foral de Navarra','La Rioja','Aragón','Comunidad de Madrid','Castilla y León','Castilla-La Mancha','Extremadura','Cataluña','Comunidad Valenciana','Illes Balears','Andalucía','Región de Murcia','Ciudad Autónoma de Ceuta','Ciudad Autónoma de Melilla','Canarias','Extra-Regio','Galicia','Principado de Asturias','Cantabria','País Vasco','Comunidad Foral de Navarra','La Rioja','Aragón','Comunidad de Madrid','Castilla y León','Castilla-La Mancha','Extremadura','Cataluña','Comunidad Valenciana','Illes Balears','Andalucía','Región de Murcia','Ciudad Autónoma de Ceuta','Ciudad Autónoma de Melilla','Canarias','Extra-Region'))
+
+g.Region <- ggplot(personasAlquiler, aes(DB040, HH060)) +
+  geom_boxplot() +
+  ggtitle('Precio del alquiler por Región') +
+  coord_flip()
+g.Region
+```
+
+Se observa que en algunas regiones como Comunidad de Madrid, Cataluña, Illes Balears la medianada del precio del alquiler en mayor que en el resto de Regiones de España.
+
+
 
