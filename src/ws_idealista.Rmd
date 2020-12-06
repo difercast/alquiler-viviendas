@@ -1,0 +1,19 @@
+---
+title: "Web-scraping-idealista"
+author: "Diego Castillo"
+date: "5/12/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Librerias necesarias para web scraping y manejo de datos
+```{r}
+library(rvest)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
